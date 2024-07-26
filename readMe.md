@@ -165,5 +165,9 @@ https://www.instructables.com/Steps-to-Setup-Arduino-IDE-for-NODEMCU-ESP8266-WiF
 ```
 
 Go to Board Manager and type ESP8266 
-install it z
+install it 
+
+check the port number from device manager 
+after run the python file 
+
 
