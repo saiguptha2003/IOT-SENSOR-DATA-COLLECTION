@@ -5,6 +5,7 @@ from datetime import datetime
 from sqlalchemy import create_engine, Column, Integer, Float, DateTime
 from sqlalchemy.orm import declarative_base, sessionmaker
 import time
+import pytz
 
 app = FastAPI()
 
@@ -41,7 +42,9 @@ async def collect_data(data: TemperatureData):
     # Ensure the timestamp is set to the current system time if not provided
     if not data.timestamp:
         system_time = time.time()
-        data.timestamp = datetime.fromtimestamp(system_time)
+        # Set timezone to Asia/Kolkata (IST)
+        tz = pytz.timezone('Asia/Kolkata')
+        data.timestamp = datetime.fromtimestamp(system_time, tz=tz)
 
     # Create a new database session
     db = SessionLocal()
@@ -69,7 +72,7 @@ async def get_data():
     
     # Format the timestamp to a readable format
     formatted_temperatures = [
-        {"id": temp.id, "temperature": temp.temperature, "timestamp": temp.timestamp.strftime("%Y-%m-%d %H:%M:%S")}
+        {"id": temp.id, "temperature": temp.temperature, "timestamp": temp.timestamp.astimezone(pytz.timezone('Asia/Kolkata')).strftime("%Y-%m-%d %H:%M:%S")}
         for temp in temperatures
     ]
     return formatted_temperatures
