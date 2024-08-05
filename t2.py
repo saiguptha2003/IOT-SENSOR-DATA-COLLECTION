@@ -30,13 +30,17 @@ Base.metadata.create_all(bind=engine)
 # Model to define the data structure
 class TemperatureData(BaseModel):
     temperature: float
-    timestamp: datetime
+    timestamp: datetime = None
 
 # In-memory storage for collected data
 data_storage: List[TemperatureData] = []
 
 @app.post("/collect-data/")
 async def collect_data(data: TemperatureData):
+    # Ensure the timestamp is set to the current time if not provided
+    if not data.timestamp:
+        data.timestamp = datetime.now()
+
     # Create a new database session
     db = SessionLocal()
     # Add the new temperature data to the database
@@ -60,7 +64,13 @@ async def get_data():
     # Query all temperature data from the database
     temperatures = db.query(Temperature).all()
     db.close()
-    return temperatures
+    
+    # Format the timestamp to a readable format
+    formatted_temperatures = [
+        {"id": temp.id, "temperature": temp.temperature, "timestamp": temp.timestamp.strftime("%Y-%m-%d %H:%M:%S")}
+        for temp in temperatures
+    ]
+    return formatted_temperatures
 
 # Example route to check if the server is running
 @app.get("/")
