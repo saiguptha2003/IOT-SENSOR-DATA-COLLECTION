@@ -5,11 +5,12 @@
 #include <time.h>
 
 // Replace these with your network credentials
-const char* ssid = "++++++++++";
-const char* password = "+++++++";
+const char* ssid = "pandusai 11i";
+
+const char* password = "8688670712";
 
 // Replace with your server's URL
-const char* serverName = "http://++++++++:8080/collect-data/";
+const char* serverName = "http://10.1.177.171:8080/collect-data/";
 
 // Data wire is plugged into GPIO 2 on the ESP8266
 #define ONE_WIRE_BUS 2

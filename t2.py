@@ -60,13 +60,7 @@ async def get_data():
     # Query all temperature data from the database
     temperatures = db.query(Temperature).all()
     db.close()
-    
-    # Format the timestamp to a readable format
-    formatted_temperatures = [
-        {"id": temp.id, "temperature": temp.temperature, "timestamp": temp.timestamp.strftime("%Y-%m-%d %H:%M:%S")}
-        for temp in temperatures
-    ]
-    return formatted_temperatures
+    return temperatures
 
 # Example route to check if the server is running
 @app.get("/")
