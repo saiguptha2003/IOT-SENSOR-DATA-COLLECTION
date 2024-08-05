@@ -1,13 +1,88 @@
+from fastapi import FastAPI
+from pydantic import BaseModel
+from typing import List
 from datetime import datetime
+from sqlalchemy import create_engine, Column, Integer, Float, DateTime
+from sqlalchemy.orm import declarative_base, sessionmaker
 import pytz
 
-# Set the timezone to Asia/Kolkata
-tz = pytz.timezone('Asia/Kolkata')
+app = FastAPI()
 
-# Get the current time in the specified timezone
-current_time = datetime.now(tz)
+# Define the SQLite URL and create the database engine
+SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
+engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
 
-# Format the timestamp to a readable string
-formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+# Create a base class for the declarative class definitions
+Base = declarative_base()
 
-print("Current time in Asia/Kolkata timezone:", formatted_time)
+# Create a session maker
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# Define the Temperature table
+class Temperature(Base):
+    __tablename__ = "temperatures"
+    id = Column(Integer, primary_key=True, index=True)
+    temperature = Column(Float, nullable=False)
+    time = Column(DateTime, nullable=False)
+
+# Create the tables in the database
+Base.metadata.create_all(bind=engine)
+
+# Model to define the data structure
+class TemperatureData(BaseModel):
+    temperature: float
+    time: datetime = None
+
+# In-memory storage for collected data
+data_storage: List[TemperatureData] = []
+
+@app.post("/collect-data/")
+async def collect_data(data: TemperatureData):
+    # Ensure the time is set to the current system time if not provided
+    if not data.time:
+        # Set timezone to Asia/Kolkata (IST)
+        tz = pytz.timezone('Asia/Kolkata')
+        data.time = datetime.now(tz)
+    
+    # Debug: Print the time to confirm correct value
+    print(f"Storing temperature: {data.temperature}, time: {data.time}")
+
+    # Create a new database session
+    db = SessionLocal()
+    # Add the new temperature data to the database
+    new_temperature = Temperature(
+        temperature=data.temperature,
+        time=data.time
+    )
+    db.add(new_temperature)
+    db.commit()
+    db.refresh(new_temperature)
+    db.close()
+
+    # Also append to in-memory storage for demonstration
+    data_storage.append(data)
+    return {"message": "Data received successfully", "data": data}
+
+@app.get("/data/")
+async def get_data():
+    # Create a new database session
+    db = SessionLocal()
+    # Query all temperature data from the database
+    temperatures = db.query(Temperature).all()
+    db.close()
+    
+    # Format the time to a readable format
+    formatted_temperatures = [
+        {"id": temp.id, "temperature": temp.temperature, "time": temp.time.astimezone(pytz.timezone('Asia/Kolkata')).strftime("%Y-%m-%d %H:%M:%S")}
+        for temp in temperatures
+    ]
+    return formatted_temperatures
+
+# Example route to check if the server is running
+@app.get("/")
+async def read_root():
+    return {"message": "FastAPI IoT data collection server is running"}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8080)
