@@ -4,6 +4,7 @@ from typing import List
 from datetime import datetime
 from sqlalchemy import create_engine, Column, Integer, Float, DateTime
 from sqlalchemy.orm import declarative_base, sessionmaker
+import time
 
 app = FastAPI()
 
@@ -30,16 +31,17 @@ Base.metadata.create_all(bind=engine)
 # Model to define the data structure
 class TemperatureData(BaseModel):
     temperature: float
-    timestamp: datetime
+    timestamp: datetime = None
 
 # In-memory storage for collected data
 data_storage: List[TemperatureData] = []
 
 @app.post("/collect-data/")
 async def collect_data(data: TemperatureData):
-    # Ensure the timestamp is set to the current time if not provided
+    # Ensure the timestamp is set to the current system time if not provided
     if not data.timestamp:
-        data.timestamp = datetime.now()
+        system_time = time.time()
+        data.timestamp = datetime.fromtimestamp(system_time)
 
     # Create a new database session
     db = SessionLocal()
