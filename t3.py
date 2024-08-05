@@ -4,7 +4,6 @@ from typing import List
 from datetime import datetime
 from sqlalchemy import create_engine, Column, Integer, Float, DateTime
 from sqlalchemy.orm import declarative_base, sessionmaker
-import time
 import pytz
 
 app = FastAPI()
@@ -41,10 +40,12 @@ data_storage: List[TemperatureData] = []
 async def collect_data(data: TemperatureData):
     # Ensure the timestamp is set to the current system time if not provided
     if not data.timestamp:
-        system_time = time.time()
         # Set timezone to Asia/Kolkata (IST)
         tz = pytz.timezone('Asia/Kolkata')
-        data.timestamp = datetime.fromtimestamp(system_time, tz=tz)
+        data.timestamp = datetime.now(tz)
+    
+    # Debug: Print the timestamp to confirm correct value
+    print(f"Storing temperature: {data.temperature}, timestamp: {data.timestamp}")
 
     # Create a new database session
     db = SessionLocal()
