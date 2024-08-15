@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sensor Data Visualization</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <h1>Sensor Data Visualization</h1>
+    <div>
+        <h2>Temperature</h2>
+        <canvas id="temperatureChart"></canvas>
+    </div>
+    <div>
+        <h2>Dissolved Oxygen</h2>
+        <canvas id="doChart"></canvas>
+    </div>
+    <script>
+        // Data from server
+        const sensorData = {{ data_json | tojson }};
+        
+        // Process data
+        const labels = sensorData.map(entry => entry.time);
+        const temperatureData = sensorData.map(entry => entry.temperature);
+        const doData = sensorData.map(entry => entry.do_concentration);
+
+        // Create Temperature Chart
+        const ctxTemp = document.getElementById('temperatureChart').getContext('2d');
+        new Chart(ctxTemp, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Temperature (°C)',
+                    data: temperatureData,
+                    borderColor: 'blue',
+                    backgroundColor: 'rgba(0, 0, 255, 0.1)',
+                    fill: true,
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        type: 'time',
+                        time: {
+                            unit: 'minute'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Time'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Temperature (°C)'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Create Dissolved Oxygen Chart
+        const ctxDO = document.getElementById('doChart').getContext('2d');
+        new Chart(ctxDO, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Dissolved Oxygen (mg/L)',
+                    data: doData,
+                    borderColor: 'orange',
+                    backgroundColor: 'rgba(255, 165, 0, 0.1)',
+                    fill: true,
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        type: 'time',
+                        time: {
+                            unit: 'minute'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Time'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Dissolved Oxygen (mg/L)'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
